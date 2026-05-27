@@ -471,11 +471,11 @@ function norm(s){
     .replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
 }
 
-function buscar(consulta){
+function buscarConScores(consulta){
   const q = norm(consulta);
   if(!q) return [];
   const palabras = q.split(" ");
-  const puntuados = DESTINOS.map(dest=>{
+  return DESTINOS.map(dest=>{
     let score = 0;
     dest.claves.forEach(clave=>{
       const c = norm(clave);
@@ -490,10 +490,21 @@ function buscar(consulta){
     const tn = norm(dest.t);
     palabras.forEach(p=>{ if(p.length>2 && tn.includes(p)) score += 3; });
     return {dest,score};
-  });
-  return puntuados.filter(x=>x.score>0).sort((a,b)=>b.score-a.score)
-                  .slice(0,5).map(x=>x.dest);
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
 }
+function buscar(consulta){
+  return buscarConScores(consulta).slice(0,5).map(x=>x.dest);
+}
+
+/* ============================================================
+   BUSCADOR — matcher local instantáneo + fallback IA
+   ============================================================
+   - Live (tipear): matcher local, gratis e instantáneo.
+   - Confirmar (Enter/Buscar): si el matcher local está confiado
+     (score > UMBRAL) usa eso. Si no, le pide a la IA del backend
+     que rankee los destinos. Si la IA falla, fallback al matcher. */
+const API_BUSCAR_URL = 'https://bcr-lluvias-app.onrender.com/api/buscar';
+const SCORE_UMBRAL_IA = 15;
 
 const $q=document.getElementById('q'),
       $btn=document.getElementById('btn'),
@@ -505,25 +516,83 @@ function tarjeta(d){
     <span class="res-tx"><b>${d.t}${ext}</b><small>${d.d}</small></span>
     <span class="res-flecha">→</span></a>`;
 }
-function mostrar(c){
-  const hits=buscar(c);
-  if(!c.trim()){ $res.classList.remove('activo'); $res.innerHTML=''; return; }
-  if(hits.length===0){
-    $res.innerHTML=`<div class="res-cabe">Sin coincidencias</div>
-      <div class="res-vacio">No encontramos algo para “${c}”. Probá con otras palabras
-      o <a href="https://www.bcr.com.ar/es/buscar" target="_top">usá el buscador completo del sitio</a>.</div>`;
-  } else {
-    $res.innerHTML=`<div class="res-cabe">${hits.length} resultado${hits.length>1?'s':''} — tocá para ir</div>`
-      + hits.map(tarjeta).join('');
-  }
-  $res.classList.add('activo');
+function pintarVacio(c){
+  return `<div class="res-cabe">Sin coincidencias</div>
+    <div class="res-vacio">No encontramos algo para “${c}”. Probá con otras palabras
+    o <a href="https://www.bcr.com.ar/es/buscar" target="_top">usá el buscador completo del sitio</a>.</div>`;
 }
-$q.addEventListener('input',e=>mostrar(e.target.value));
-$btn.addEventListener('click',()=>{
-  const h=buscar($q.value);
-  if(h.length>0) window.top.location.href=h[0].u; else mostrar($q.value);
-});
-$q.addEventListener('keydown',e=>{ if(e.key==='Enter') $btn.click(); });
+function pintarHits(hits, cabe){
+  $res.innerHTML = `<div class="res-cabe">${cabe}</div>` + hits.map(tarjeta).join('');
+}
+function activar(){ $res.classList.add('activo'); }
+function cabeNormal(n){ return `${n} resultado${n>1?'s':''} — tocá para ir`; }
+
+/* Live: cada tecla → matcher local, instantáneo */
+function mostrar(c){
+  if(!c.trim()){ $res.classList.remove('activo'); $res.innerHTML=''; return; }
+  const hits = buscar(c);
+  if(hits.length===0) $res.innerHTML = pintarVacio(c);
+  else pintarHits(hits, cabeNormal(hits.length));
+  activar();
+}
+
+/* Al confirmar (Enter/Buscar): score alto → matcher; bajo → IA. */
+async function ejecutarBusqueda(consulta){
+  const c = consulta.trim();
+  if(!c) return;
+  const conScores = buscarConScores(c);
+  const best = conScores[0]?.score || 0;
+
+  if(best > SCORE_UMBRAL_IA){
+    const hits = conScores.slice(0,5).map(x=>x.dest);
+    pintarHits(hits, cabeNormal(hits.length));
+    activar();
+    return;
+  }
+
+  $res.innerHTML = '<div class="res-cabe">🤖 Buscando con IA…</div>';
+  activar();
+
+  try{
+    const matches = await buscarIA(c);
+    if(matches.length > 0){
+      pintarHits(matches, `🤖 Resultados con IA — ${matches.length} destino${matches.length>1?'s':''}`);
+    } else if(conScores.length > 0){
+      const hits = conScores.slice(0,3).map(x=>x.dest);
+      pintarHits(hits, cabeNormal(hits.length));
+    } else {
+      $res.innerHTML = pintarVacio(c);
+    }
+  } catch(err){
+    console.warn('[buscador IA] fallback a matcher local:', err.message);
+    if(conScores.length > 0){
+      const hits = conScores.slice(0,3).map(x=>x.dest);
+      pintarHits(hits, cabeNormal(hits.length));
+    } else {
+      $res.innerHTML = pintarVacio(c);
+    }
+  }
+  activar();
+}
+
+async function buscarIA(consulta){
+  if(API_BUSCAR_URL.includes('PLACEHOLDER')) throw new Error('Backend URL aún no configurada');
+  const destinos = DESTINOS.map(d=>({t:d.t, d:d.d, u:d.u}));
+  const res = await fetch(API_BUSCAR_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({q:consulta, destinos})
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  return (data.matches||[])
+    .map(m => DESTINOS.find(d=>d.u===m.u))
+    .filter(Boolean);
+}
+
+$q.addEventListener('input', e=>mostrar(e.target.value));
+$btn.addEventListener('click', ()=>ejecutarBusqueda($q.value));
+$q.addEventListener('keydown', e=>{ if(e.key==='Enter') ejecutarBusqueda($q.value); });
 </script>
 </body>
 </html>
