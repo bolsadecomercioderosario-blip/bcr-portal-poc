@@ -492,8 +492,16 @@ function buscarConScores(consulta){
     return {dest,score};
   }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
 }
+/* Filtra resultados con score significativo vs. el top.
+   Evita que matches débiles (ej "che" → "cheque" → MAV) ensucien. */
+function filtrarRelevantes(scored){
+  if(scored.length === 0) return [];
+  const top = scored[0].score;
+  const min = Math.max(5, top * 0.4);
+  return scored.filter(x => x.score >= min);
+}
 function buscar(consulta){
-  return buscarConScores(consulta).slice(0,5).map(x=>x.dest);
+  return filtrarRelevantes(buscarConScores(consulta)).slice(0,5).map(x=>x.dest);
 }
 
 /* ============================================================
@@ -504,7 +512,7 @@ function buscar(consulta){
      (score > UMBRAL) usa eso. Si no, le pide a la IA del backend
      que rankee los destinos. Si la IA falla, fallback al matcher. */
 const API_BUSCAR_URL = 'https://bcr-lluvias-app.onrender.com/api/buscar';
-const SCORE_UMBRAL_IA = 15;
+const SCORE_UMBRAL_IA = 25;
 
 const $q=document.getElementById('q'),
       $btn=document.getElementById('btn'),
@@ -544,7 +552,7 @@ async function ejecutarBusqueda(consulta){
   const best = conScores[0]?.score || 0;
 
   if(best > SCORE_UMBRAL_IA){
-    const hits = conScores.slice(0,5).map(x=>x.dest);
+    const hits = filtrarRelevantes(conScores).slice(0,5).map(x=>x.dest);
     pintarHits(hits, cabeNormal(hits.length));
     activar();
     return;
@@ -558,7 +566,7 @@ async function ejecutarBusqueda(consulta){
     if(matches.length > 0){
       pintarHits(matches, `🤖 Resultados con IA — ${matches.length} destino${matches.length>1?'s':''}`);
     } else if(conScores.length > 0){
-      const hits = conScores.slice(0,3).map(x=>x.dest);
+      const hits = filtrarRelevantes(conScores).slice(0,3).map(x=>x.dest);
       pintarHits(hits, cabeNormal(hits.length));
     } else {
       $res.innerHTML = pintarVacio(c);
@@ -566,7 +574,7 @@ async function ejecutarBusqueda(consulta){
   } catch(err){
     console.warn('[buscador IA] fallback a matcher local:', err.message);
     if(conScores.length > 0){
-      const hits = conScores.slice(0,3).map(x=>x.dest);
+      const hits = filtrarRelevantes(conScores).slice(0,3).map(x=>x.dest);
       pintarHits(hits, cabeNormal(hits.length));
     } else {
       $res.innerHTML = pintarVacio(c);
