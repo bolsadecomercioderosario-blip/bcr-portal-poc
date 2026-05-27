@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolsa de Comercio de Rosario — ¿Qué estás buscando?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta oficial BCR — Manual de identidad visual v2.0 */
+    --azul:#002d5f;          /* Pantone 282C */
+    --azul-90:#1a4270;
+    --azul-70:#4d6e92;
+    --azul-40:#99aec4;
+    --azul-prof:#001c3b;
+    --crema:#f5f6f8;
+    --linea:#e7eaef;
+    --texto:#1d2735;
+    --gris-tx:#6b7585;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Lato',-apple-system,Arial,sans-serif;
+    color:var(--texto);
+    background:var(--azul-prof);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+  }
+  /* franja de marca */
+  .marca{
+    flex:0 0 32%;
+    background:var(--azul);
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2rem;
+    overflow:hidden;
+  }
+  .marca::after{
+    /* medalla tenue de fondo, como en el manual */
+    content:"";
+    position:absolute;
+    width:130%;
+    aspect-ratio:1;
+    right:-55%;
+    border:2px solid rgba(255,255,255,.05);
+    border-radius:50%;
+  }
+  .marca img{
+    width:min(70%,230px);
+    position:relative;
+    z-index:1;
+  }
+  /* panel con foto */
+  .panel{
+    flex:1;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:5vw 5.5vw;
+    background-image:
+      linear-gradient(108deg, rgba(0,28,59,.96) 0%, rgba(0,28,59,.78) 40%, rgba(0,28,59,.55) 100%),
+      var(--foto-desk);
+    background-size:cover;
+    background-position:center;
+  }
+  .kicker{
+    color:#fff;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    font-size:.72rem;
+    font-weight:700;
+    padding-left:.2rem;
+    margin-bottom:1.1rem;
+    opacity:0; animation:rise .7s ease .1s forwards;
+  }
+  .kicker::before{
+    content:"";
+    display:inline-block;
+    width:26px;height:2px;
+    background:#fff;
+    vertical-align:middle;
+    margin-right:.7rem;
+    margin-bottom:.18em;
+  }
+  h1.titulo{
+    color:#fff;
+    font-weight:900;
+    font-size:clamp(2rem,3.6vw,3.4rem);
+    line-height:1.12;
+    letter-spacing:-.01em;
+    max-width:16ch;
+    margin-bottom:.7rem;
+    opacity:0; animation:rise .8s ease .25s forwards;
+  }
+  .lead{
+    color:rgba(255,255,255,.72);
+    font-size:1.04rem;
+    line-height:1.6;
+    max-width:44ch;
+    margin-bottom:2.3rem;
+    opacity:0; animation:rise .8s ease .4s forwards;
+  }
+  /* ===== BUSCADOR ===== */
+  .buscador{
+    width:100%; max-width:640px;
+    opacity:0; animation:rise .8s ease .55s forwards;
+  }
+  .campo{
+    display:flex; align-items:center;
+    background:#fff;
+    border-radius:6px;
+    box-shadow:0 26px 64px -22px rgba(0,0,0,.6);
+    overflow:hidden;
+  }
+  .campo svg{margin-left:1.15rem;flex:0 0 22px;opacity:.5}
+  .campo input{
+    flex:1; border:0; outline:0;
+    padding:1.15rem 1rem;
+    font-family:'Lato',sans-serif;
+    font-size:1.05rem;
+    color:var(--texto);
+    background:transparent;
+  }
+  .campo input::placeholder{color:#9aa3b2}
+  .campo button{
+    border:0; cursor:pointer;
+    background:var(--azul);
+    color:#fff;
+    font-family:'Lato',sans-serif;
+    font-weight:700;
+    font-size:.95rem;
+    padding:1.15rem 1.7rem;
+    transition:background .2s;
+  }
+  .campo button:hover{background:var(--azul-90)}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;align-items:center}
+  .chips .lbl{
+    font-size:.68rem;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:rgba(255,255,255,.5);margin-right:.15rem;
+  }
+  .chip{
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.2);
+    color:#fff;
+    font-family:'Lato',sans-serif;
+    font-size:.84rem;
+    padding:.42rem .9rem;
+    border-radius:30px;
+    cursor:pointer;
+    transition:all .18s;
+  }
+  .chip:hover{background:#fff;color:var(--azul);border-color:#fff}
+  /* resultados */
+  .resultados{
+    margin-top:.85rem;
+    background:#fff;
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 26px 64px -22px rgba(0,0,0,.6);
+    display:none;
+  }
+  .resultados.activo{display:block}
+  .res-cabe{
+    padding:.65rem 1.1rem;
+    font-size:.68rem;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--gris-tx);
+    border-bottom:1px solid var(--linea);
+    background:var(--crema);
+  }
+  .res-item{
+    display:flex;align-items:center;gap:.95rem;
+    padding:.95rem 1.1rem;
+    text-decoration:none;color:var(--texto);
+    border-bottom:1px solid var(--linea);
+    transition:background .15s;
+  }
+  .res-item:last-child{border-bottom:0}
+  .res-item:hover{background:var(--crema)}
+  .res-ico{
+    flex:0 0 40px;height:40px;
+    background:var(--azul);color:#fff;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.05rem;font-weight:900;
+  }
+  .res-tx b{display:block;font-size:.98rem;font-weight:700;line-height:1.3}
+  .res-tx small{color:var(--gris-tx);font-size:.82rem}
+  .res-flecha{margin-left:auto;color:var(--azul);opacity:.35;font-size:1.3rem}
+  .res-ext{
+    font-size:.6rem;font-weight:700;
+    background:var(--crema);color:var(--azul);
+    border:1px solid var(--linea);
+    padding:.08rem .4rem;border-radius:3px;
+    letter-spacing:.04em;margin-left:.45rem;vertical-align:middle;
+  }
+  .res-vacio{padding:1.3rem 1.1rem;color:var(--gris-tx);font-size:.94rem}
+  .res-vacio a{color:var(--azul);font-weight:700}
+  /* conocer */
+  .conocer{margin-top:2rem;opacity:0;animation:rise .8s ease .7s forwards}
+  .conocer a{
+    display:inline-flex;align-items:center;gap:.55rem;
+    color:rgba(255,255,255,.82);text-decoration:none;
+    font-size:.97rem;
+    border-bottom:1px solid rgba(255,255,255,.28);
+    padding-bottom:.22rem;transition:all .2s;
+  }
+  .conocer a:hover{color:#fff;border-color:#fff}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  .kicker,h1.titulo,.lead,.buscador,.conocer{transform:translateY(15px)}
+  /* sello demo */
+  .demo{
+    position:fixed;top:0;right:0;z-index:60;
+    background:#fff;color:var(--azul);
+    font-size:.6rem;font-weight:900;letter-spacing:.13em;
+    text-transform:uppercase;
+    padding:.36rem .85rem;
+    border-bottom-left-radius:6px;
+    box-shadow:0 4px 14px rgba(0,0,0,.2);
+  }
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:880px){
+    .hero{flex-direction:column}
+    .marca{
+      flex:0 0 auto;
+      padding:2.6rem 1rem 2.2rem;
+    }
+    .marca img{width:130px}
+    .marca::after{display:none}
+    .panel{
+      padding:3rem 1.5rem 3.6rem;
+      background-image:
+        linear-gradient(180deg, rgba(0,28,59,.62) 0%, rgba(0,28,59,.8) 55%, rgba(0,28,59,.97) 100%),
+        var(--foto-mob);
+    }
+    h1.titulo{font-size:1.85rem}
+    .lead{font-size:.98rem}
+    .campo button{padding:1.15rem 1.05rem;font-size:.85rem}
+    .campo button .btxt-larga{display:none}
+  }
+</style>
+</head>
+<body><style>:root{--foto-desk:url(assets/hero-desktop.jpg);--foto-mob:url(assets/hero-mobile.jpg);}</style>
+
+<div class="demo">Prueba de concepto</div>
+
+<section class="hero">
+  <div class="marca">
+    <img src="assets/logo-bcr.png" alt="Bolsa de Comercio de Rosario">
+  </div>
+
+  <div class="panel">
+    <div class="kicker">Portal de acceso</div>
+    <h1 class="titulo">¿Qué estás buscando hoy?</h1>
+    <p class="lead">Escribilo en tus palabras y te llevamos directo a lo que necesitás. Sin menús, sin vueltas.</p>
+
+    <div class="buscador">
+      <div class="campo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#002d5f" stroke-width="2.2">
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
+        </svg>
+        <input type="text" id="q" autocomplete="off"
+               placeholder="Ej: precio de la soja, turno para el puerto, informe semanal…">
+        <button id="btn"><span class="btxt-larga">Buscar</span><span class="btxt-corta" style="display:none">→</span></button>
+      </div>
+
+      <div class="chips" id="chips"><span class="lbl">Lo más buscado:</span></div>
+      <div class="resultados" id="resultados"></div>
+    </div>
+
+    <div class="conocer">
+      <a id="conocer" href="https://bcr.shorthandstories.com/la-bcr-y-sus-mercados/">
+        ❖&nbsp; No sé bien qué busco — llevame a conocer la BCR
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   MAPA DE DESTINOS  ·  BCR
+   Editable a mano. Cada destino tiene su URL y sus "claves"
+   (palabras y jerga que lo disparan). Fase 2: lo resuelve IA.
+   ============================================================ */
+const DESTINOS = [
+  { t:"Cotizaciones locales (precios de pizarra)",
+    d:"Precios del mercado físico de granos en Rosario",
+    u:"https://www.bcr.com.ar/es/mercados/mercado-de-granos/cotizaciones/cotizaciones-locales-2",
+    ico:"$", ext:false,
+    claves:["cotizacion","cotizaciones","precio","precios","pizarra","precio de pizarra",
+      "precios de pizarra","soja","maiz","trigo","girasol","sorgo","cebada",
+      "cuanto esta la soja","cuanto vale","valor","granos hoy","mercado fisico precio",
+      "cotizacion local","disponible","mercado disponible"] },
+  { t:"Cotizaciones internacionales",
+    d:"Chicago, Kansas y precios FOB/FAS",
+    u:"https://www.bcr.com.ar/es/mercados/mercado-de-granos/cotizaciones/cotizaciones-internacionales-1",
+    ico:"⇄", ext:false,
+    claves:["internacional","internacionales","chicago","kansas","fob","fas","exterior",
+      "cierre de chicago","mercado de chicago","precio internacional","cbot"] },
+  { t:"Informativo Semanal",
+    d:"El análisis semanal de mercados de la BCR",
+    u:"https://www.bcr.com.ar/es/mercados/investigacion-y-desarrollo/informativo-semanal",
+    ico:"▤", ext:false,
+    claves:["informativo","informativo semanal","semanal","el semanal","informe semanal",
+      "analisis","investigacion","reporte semanal","novedades"] },
+  { t:"Comentario diario del Mercado Físico",
+    d:"Qué pasó hoy en la rueda de Rosario",
+    u:"https://www.bcr.com.ar/es/mercados/mercado-de-granos/comentario-del-mercado/comentario-del-mercado-local",
+    ico:"✎", ext:false,
+    claves:["comentario","comentario diario","comentario del mercado","mercado local",
+      "que paso hoy","rueda","resumen del dia","comentario fisico"] },
+  { t:"Boletín Diario de Granos",
+    d:"El boletín oficial diario del mercado de granos",
+    u:"https://www.bcr.com.ar/es/mercados/boletin-diario/mercado-de-granos",
+    ico:"▦", ext:false,
+    claves:["boletin","boletin diario","boletin de granos","diario de granos","boletin oficial"] },
+  { t:"Clima y lluvias (GEA)",
+    d:"Lluvias, estaciones meteorológicas e indicadores",
+    u:"https://www.bcr.com.ar/es/mercados/gea/clima/clima-gea/lluvias",
+    ico:"☂", ext:false,
+    claves:["clima","lluvia","lluvias","tiempo","pronostico","meteorologia","estaciones",
+      "milimetros","gea clima","cuanto llovio","precipitaciones"] },
+  { t:"GEA — Guía Estratégica para el Agro",
+    d:"Estimaciones de producción y seguimiento de cultivos",
+    u:"https://www.bcr.com.ar/es/mercados/gea",
+    ico:"❧", ext:false,
+    claves:["gea","guia estrategica","estimaciones","produccion","cultivos","cosecha",
+      "seguimiento de cultivos","zona nucleo","siembra","rinde"] },
+  { t:"Turnos al puerto — Muvin",
+    d:"Sacá turno para la descarga de granos en puerto",
+    u:"https://www.bcr.com.ar/es/servicios/servicios-digitales/muvin-app",
+    ico:"⚓", ext:false,
+    claves:["turno","turnos","puerto","muvin","descarga","camion","sacar turno",
+      "turno puerto","turno para el puerto","turno descarga","logistica"] },
+  { t:"Firma digital — Autoridad de Registro BCR",
+    d:"Gestioná tu certificado de firma digital",
+    u:"https://www.bcr.com.ar/es/servicios/servicios-digitales/autoridad-de-registro-bcr-firma-digital",
+    ico:"✒", ext:false,
+    claves:["firma","firma digital","certificado","autoridad de registro","token",
+      "afip","firma electronica","certificado digital"] },
+  { t:"BCRdigital — Servicios digitales",
+    d:"Trámites, certificados y gestiones online",
+    u:"https://www.bcr.com.ar/es/servicios/servicios-digitales/servicios-digitales-bcrdigital",
+    ico:"❒", ext:false,
+    claves:["bcrdigital","digital","servicios digitales","tramite","tramites","gestiones",
+      "online","plataforma digital","certificados"] },
+  { t:"Cámara Arbitral de Cereales",
+    d:"Certificación de calidad de granos y laudos arbitrales",
+    u:"https://cac.bcr.com.ar/",
+    ico:"§", ext:true,
+    claves:["camara arbitral","camara de cereales","arbitraje","laudo","calidad de granos",
+      "merma","merma por humedad","liquidacion","analisis de calidad","cac",
+      "controversia","normas de comercializacion","peritaje"] },
+  { t:"Cámara Arbitral de Aceites Vegetales",
+    d:"Certificación de calidad de aceites y subproductos",
+    u:"https://www.bcr.com.ar/es/camaras/camara-arbitral-de-aceites-vegetales-y-subproductos/sobre-la-camara-arbitral-de-aceites",
+    ico:"⬡", ext:false,
+    claves:["aceites","aceite","camara de aceites","subproductos","oleaginosa",
+      "calidad de aceite","arbitraje aceites"] },
+  { t:"BCRLabs — Laboratorios",
+    d:"Análisis de calidad, inocuidad y caracterización",
+    u:"https://www.bcr.com.ar/es/servicios/laboratorios-bcr",
+    ico:"⚗", ext:false,
+    claves:["lab","labs","bcrlabs","laboratorio","laboratorios","analisis","muestra",
+      "inocuidad","microbiologia","cromatografia","analizar","ensayo"] },
+  { t:"Mercado físico de granos",
+    d:"Sobre el principal centro de negocios de granos del país",
+    u:"https://www.bcr.com.ar/es/mercados/mercado-de-granos/sobre-el-mercado-fisico-de-granos",
+    ico:"▣", ext:false,
+    claves:["mercado de granos","mercado fisico","sobre el mercado","como opera",
+      "que es el mercado","recinto","rueda de negocios"] },
+  { t:"A3 Mercados",
+    d:"Futuros, opciones y financieros (ex Matba Rofex / MAE)",
+    u:"https://a3mercados.com.ar/",
+    ico:"△", ext:true,
+    claves:["a3","a3 mercados","futuros","opciones","matba","rofex","matba rofex","mae",
+      "derivados","contratos","otc","mercado de futuros"] },
+  { t:"Mercado Argentino de Valores (MAV)",
+    d:"Financiamiento Pyme: cheques, pagarés, obligaciones",
+    u:"https://mav-sa.com.ar/",
+    ico:"◈", ext:true,
+    claves:["mav","mercado de valores","valores","financiamiento","pyme","pymes",
+      "cheque","cheques","echeq","pagare","obligaciones negociables","factoring",
+      "invertir","inversion"] },
+  { t:"Rosgan — Mercado ganadero",
+    d:"Remates de hacienda televisados y online",
+    u:"https://www.rosgan.com.ar/",
+    ico:"⛬", ext:true,
+    claves:["rosgan","ganado","hacienda","ganadero","remate","remates","vacas","terneros",
+      "invernada","cria","novillos","mercado ganadero","carne"] },
+  { t:"Cámaras de la BCR",
+    d:"Todas las cámaras arbitrales y comisiones",
+    u:"https://www.bcr.com.ar/es/camaras",
+    ico:"⛨", ext:false,
+    claves:["camaras","camara","comisiones","arbitrales"] },
+  { t:"Resumen de diarios",
+    d:"La síntesis diaria de noticias del agro y la economía",
+    u:"https://www.bcr.com.ar/es/mercados/investigacion-y-desarrollo/resumen-de-noticias/resumen-de-diarios",
+    ico:"❡", ext:false,
+    claves:["resumen de diarios","noticias","diarios","prensa","resumen de noticias","sintesis"] },
+  { t:"Museo de la Bolsa",
+    d:"Historia y patrimonio de la BCR",
+    u:"https://www.bcr.com.ar/es/servicios/cultura/museo",
+    ico:"☗", ext:false,
+    claves:["museo","historia","cultura","patrimonio","visita guiada","edificio"] },
+  { t:"Sobre la BCR",
+    d:"Quiénes somos, autoridades e institucional",
+    u:"https://www.bcr.com.ar/es/sobre-bcr",
+    ico:"❖", ext:false,
+    claves:["sobre bcr","quienes somos","institucional","autoridades","contacto",
+      "donde queda","direccion","telefono","la bolsa","conocer la bcr"] }
+];
+
+const FRECUENTES = [
+  "Cotizaciones locales (precios de pizarra)",
+  "Informativo Semanal",
+  "Turnos al puerto — Muvin",
+  "Clima y lluvias (GEA)"
+];
+
+function norm(s){
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+}
+
+function buscar(consulta){
+  const q = norm(consulta);
+  if(!q) return [];
+  const palabras = q.split(" ");
+  const puntuados = DESTINOS.map(dest=>{
+    let score = 0;
+    dest.claves.forEach(clave=>{
+      const c = norm(clave);
+      if(q.includes(c)) score += c.split(" ").length * 10;
+      else if(c.includes(q) && q.length>2) score += 6;
+      else palabras.forEach(p=>{
+        if(p.length<3) return;
+        if(c===p) score += 5;
+        else if(c.includes(p)||p.includes(c)) score += 2;
+      });
+    });
+    const tn = norm(dest.t);
+    palabras.forEach(p=>{ if(p.length>2 && tn.includes(p)) score += 3; });
+    return {dest,score};
+  });
+  return puntuados.filter(x=>x.score>0).sort((a,b)=>b.score-a.score)
+                  .slice(0,5).map(x=>x.dest);
+}
+
+const $q=document.getElementById('q'),
+      $btn=document.getElementById('btn'),
+      $res=document.getElementById('resultados'),
+      $chips=document.getElementById('chips');
+
+function tarjeta(d){
+  const ext = d.ext ? '<span class="res-ext">sitio externo</span>' : '';
+  return `<a class="res-item" href="${d.u}" target="_top">
+    <span class="res-ico">${d.ico}</span>
+    <span class="res-tx"><b>${d.t}${ext}</b><small>${d.d}</small></span>
+    <span class="res-flecha">→</span></a>`;
+}
+function mostrar(c){
+  const hits=buscar(c);
+  if(!c.trim()){ $res.classList.remove('activo'); $res.innerHTML=''; return; }
+  if(hits.length===0){
+    $res.innerHTML=`<div class="res-cabe">Sin coincidencias</div>
+      <div class="res-vacio">No encontramos algo para “${c}”. Probá con otras palabras
+      o <a href="https://www.bcr.com.ar/es/buscar" target="_top">usá el buscador completo del sitio</a>.</div>`;
+  } else {
+    $res.innerHTML=`<div class="res-cabe">${hits.length} resultado${hits.length>1?'s':''} — tocá para ir</div>`
+      + hits.map(tarjeta).join('');
+  }
+  $res.classList.add('activo');
+}
+$q.addEventListener('input',e=>mostrar(e.target.value));
+$btn.addEventListener('click',()=>{
+  const h=buscar($q.value);
+  if(h.length>0) window.top.location.href=h[0].u; else mostrar($q.value);
+});
+$q.addEventListener('keydown',e=>{ if(e.key==='Enter') $btn.click(); });
+
+FRECUENTES.forEach(n=>{
+  const d=DESTINOS.find(x=>x.t===n); if(!d) return;
+  const c=document.createElement('button');
+  c.className='chip';
+  c.textContent=d.t.split(' (')[0].split(' — ')[0];
+  c.onclick=()=>{ window.top.location.href=d.u; };
+  $chips.appendChild(c);
+});
+</script>
+</body>
+</html>
