@@ -100,16 +100,8 @@
     line-height:1.12;
     letter-spacing:-.01em;
     max-width:16ch;
-    margin-bottom:.7rem;
+    margin-bottom:2rem;
     opacity:0; animation:rise .8s ease .25s forwards;
-  }
-  .lead{
-    color:rgba(255,255,255,.72);
-    font-size:1.04rem;
-    line-height:1.6;
-    max-width:44ch;
-    margin-bottom:2.3rem;
-    opacity:0; animation:rise .8s ease .4s forwards;
   }
   /* ===== BUSCADOR ===== */
   .buscador{
@@ -187,13 +179,6 @@
   }
   .res-item:last-child{border-bottom:0}
   .res-item:hover{background:var(--crema)}
-  .res-ico{
-    flex:0 0 40px;height:40px;
-    background:var(--azul);color:#fff;
-    border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.05rem;font-weight:900;
-  }
   .res-tx b{display:block;font-size:.98rem;font-weight:700;line-height:1.3}
   .res-tx small{color:var(--gris-tx);font-size:.82rem}
   .res-flecha{margin-left:auto;color:var(--azul);opacity:.35;font-size:1.3rem}
@@ -207,17 +192,20 @@
   .res-vacio{padding:1.3rem 1.1rem;color:var(--gris-tx);font-size:.94rem}
   .res-vacio a{color:var(--azul);font-weight:700}
   /* conocer */
-  .conocer{margin-top:2rem;opacity:0;animation:rise .8s ease .7s forwards}
+  .conocer{margin-top:1.9rem;opacity:0;animation:rise .8s ease .7s forwards}
   .conocer a{
-    display:inline-flex;align-items:center;gap:.55rem;
-    color:rgba(255,255,255,.82);text-decoration:none;
-    font-size:.97rem;
-    border-bottom:1px solid rgba(255,255,255,.28);
-    padding-bottom:.22rem;transition:all .2s;
+    display:inline-flex;align-items:center;gap:.7rem;
+    color:#fff;text-decoration:none;
+    font-size:1.02rem;font-weight:600;
+    padding:.95rem 1.55rem;
+    border:1.5px solid rgba(255,255,255,.5);
+    border-radius:6px;
+    background:rgba(255,255,255,.06);
+    transition:all .2s;
   }
-  .conocer a:hover{color:#fff;border-color:#fff}
+  .conocer a:hover{background:#fff;color:var(--azul-prof);border-color:#fff;transform:translateY(-1px)}
   @keyframes rise{to{opacity:1;transform:translateY(0)}}
-  .kicker,h1.titulo,.lead,.buscador,.conocer{transform:translateY(15px)}
+  h1.titulo,.buscador,.conocer{transform:translateY(15px)}
   /* sello demo */
   .demo{
     position:fixed;top:0;right:0;z-index:60;
@@ -260,9 +248,7 @@
   </div>
 
   <div class="panel">
-    <div class="kicker">Portal de acceso</div>
     <h1 class="titulo">¿Qué estás buscando hoy?</h1>
-    <p class="lead">Escribilo en tus palabras y te llevamos directo a lo que necesitás. Sin menús, sin vueltas.</p>
 
     <div class="buscador">
       <div class="campo">
@@ -274,7 +260,6 @@
         <button id="btn"><span class="btxt-larga">Buscar</span><span class="btxt-corta" style="display:none">→</span></button>
       </div>
 
-      <div class="chips" id="chips"><span class="lbl">Lo más buscado:</span></div>
       <div class="resultados" id="resultados"></div>
     </div>
 
@@ -459,13 +444,11 @@ function buscar(consulta){
 
 const $q=document.getElementById('q'),
       $btn=document.getElementById('btn'),
-      $res=document.getElementById('resultados'),
-      $chips=document.getElementById('chips');
+      $res=document.getElementById('resultados');
 
 function tarjeta(d){
   const ext = d.ext ? '<span class="res-ext">sitio externo</span>' : '';
   return `<a class="res-item" href="${d.u}" target="_top">
-    <span class="res-ico">${d.ico}</span>
     <span class="res-tx"><b>${d.t}${ext}</b><small>${d.d}</small></span>
     <span class="res-flecha">→</span></a>`;
 }
@@ -488,15 +471,6 @@ $btn.addEventListener('click',()=>{
   if(h.length>0) window.top.location.href=h[0].u; else mostrar($q.value);
 });
 $q.addEventListener('keydown',e=>{ if(e.key==='Enter') $btn.click(); });
-
-FRECUENTES.forEach(n=>{
-  const d=DESTINOS.find(x=>x.t===n); if(!d) return;
-  const c=document.createElement('button');
-  c.className='chip';
-  c.textContent=d.t.split(' (')[0].split(' — ')[0];
-  c.onclick=()=>{ window.top.location.href=d.u; };
-  $chips.appendChild(c);
-});
 </script>
 </body>
 </html>
